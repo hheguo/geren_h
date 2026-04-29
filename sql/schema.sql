@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
 -- 2. 房间表
 CREATE TABLE IF NOT EXISTS `game_room` (
   `id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `room_code` varchar(64) NOT NULL UNIQUE COMMENT '房间号/UUID',
+  `room_code` varchar(64) NOT NULL UNIQUE COMMENT '房间邀请码(默认6位数字)',
   `owner_id` bigint NOT NULL COMMENT '房主ID',
   `status` tinyint DEFAULT 0 COMMENT '0:进行中, 1:已结束',
   `score_mode` tinyint DEFAULT 0 COMMENT '记分模式: 0-普通, 1-台版',

@@ -1,6 +1,5 @@
 package com.tenpai.backend.tenpai_backend.service.impl;
 
-import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tenpai.backend.tenpai_backend.entity.GameRoom;
 import com.tenpai.backend.tenpai_backend.mapper.GameRoomMapper;
@@ -26,8 +25,8 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
         room.setScoreMode(scoreMode != null ? scoreMode : 0);
         room.setStatus(0);
 
-        // 使用 simpleUUID 作为房间号 (32位，无横线，符合微信 scene 限制)
-        String roomCode = cn.hutool.core.util.IdUtil.simpleUUID();
+        // 使用 6 位邀请码作为房间号，便于输入和分享
+        String roomCode = generateUniqueRoomCode();
         room.setRoomCode(roomCode);
         
         gameRoomMapper.insert(room);
@@ -157,5 +156,15 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
     // Helper getter for controller if needed, but we use interface method now
     public com.tenpai.backend.tenpai_backend.mapper.GameRecordMapper getGameRecordMapper() {
         return gameRecordMapper;
+    }
+
+    private String generateUniqueRoomCode() {
+        for (int i = 0; i < 20; i++) {
+            String code = String.valueOf(cn.hutool.core.util.RandomUtil.randomInt(100000, 1000000));
+            if (gameRoomMapper.selectByRoomCode(code) == null) {
+                return code;
+            }
+        }
+        throw new RuntimeException("房间创建失败，请稍后再试");
     }
 }

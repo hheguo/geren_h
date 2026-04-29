@@ -17,7 +17,7 @@ public class GameRoom {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 4位数字房间号 */
+    /** 房间邀请码 (当前为 6 位数字) */
     private String roomCode;
 
     /** 房主ID */

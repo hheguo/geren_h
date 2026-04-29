@@ -99,9 +99,14 @@ public class GameRoomController {
      * 获取小程序码
      */
     @GetMapping("/qrcode")
-    public R<String> getRoomQRCode(@RequestParam String uuid) {
-        // Reverting to correct page now that user has uploaded trial version
-        String imageBase64 = weChatService.getUnlimitedQRCode(uuid, "pages/room/room");
+    public R<String> getRoomQRCode(@RequestParam(required = false) String code,
+                                   @RequestParam(required = false) String uuid) {
+        // 兼容旧参数 uuid，新版本使用 code
+        String scene = (code != null && !code.isEmpty()) ? code : uuid;
+        if (scene == null || scene.isEmpty()) {
+            return R.fail("Missing room code");
+        }
+        String imageBase64 = weChatService.getUnlimitedQRCode(scene, "pages/room/room");
         if (imageBase64 == null) {
             return R.fail("Failed to generate QR code");
         }
