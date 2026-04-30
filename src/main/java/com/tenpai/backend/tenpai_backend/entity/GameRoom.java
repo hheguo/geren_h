@@ -35,6 +35,9 @@ public class GameRoom {
     /** 创建时间 */
     private LocalDateTime createTime;
 
+    /** 最后活跃时间（用于超时自动结束） */
+    private LocalDateTime lastActiveTime;
+
     /** 玩家列表 JSON */
     private String players;
 

@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS `game_room` (
   `status` tinyint DEFAULT 0 COMMENT '0:进行中, 1:已结束',
   `score_mode` tinyint DEFAULT 0 COMMENT '记分模式: 0-普通, 1-台版',
   `rules` json COMMENT '规则配置(底分等)',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `last_active_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '最后活跃时间(用于超时自动结束)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='房间表';
 
 -- 3. 战绩流水表
@@ -60,3 +61,4 @@ CREATE TABLE IF NOT EXISTS `user_game_record` (
 -- 索引
 CREATE INDEX idx_game_record_room_id ON `game_record`(`room_id`);
 CREATE INDEX idx_game_room_owner_id ON `game_room`(`owner_id`);
+CREATE INDEX idx_game_room_status_active_time ON `game_room`(`status`, `last_active_time`);

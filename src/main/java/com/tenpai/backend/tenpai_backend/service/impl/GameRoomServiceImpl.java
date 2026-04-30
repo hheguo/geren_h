@@ -7,6 +7,8 @@ import com.tenpai.backend.tenpai_backend.service.GameRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 /**
  * 房间 Service 实现
  */
@@ -19,11 +21,15 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
 
     @Override
     public GameRoom createRoom(Long ownerId, String rules, Integer scoreMode) {
+        autoEndExpiredRooms();
+        ensureNoActiveRoomForUser(ownerId);
+
         GameRoom room = new GameRoom();
         room.setOwnerId(ownerId);
         room.setRules(rules);
         room.setScoreMode(scoreMode != null ? scoreMode : 0);
         room.setStatus(0);
+        room.setLastActiveTime(LocalDateTime.now());
 
         // 使用 6 位邀请码作为房间号，便于输入和分享
         String roomCode = generateUniqueRoomCode();
@@ -35,6 +41,7 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
 
     @Override
     public java.util.List<GameRoom> listRooms(Long userId) {
+        autoEndExpiredRooms();
         java.util.List<GameRoom> rooms = gameRoomMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<GameRoom>()
                 .eq("owner_id", userId)
                 .orderByDesc("create_time"));
@@ -110,6 +117,7 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
 
     @Override
     public GameRoom joinRoom(String roomCode) {
+        autoEndExpiredRooms();
         GameRoom room = gameRoomMapper.selectByRoomCode(roomCode);
         if (room == null) {
             throw new IllegalArgumentException("房间不存在");
@@ -122,6 +130,7 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
 
     @Override
     public void endRoom(Long roomId) {
+        autoEndExpiredRooms();
         GameRoom room = gameRoomMapper.selectById(roomId);
         if (room == null) {
             throw new IllegalArgumentException("房间不存在");
@@ -132,6 +141,7 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
 
     @Override
     public GameRoom getRoomByCode(String roomCode) {
+        autoEndExpiredRooms();
         GameRoom room = gameRoomMapper.selectByRoomCode(roomCode);
         if (room == null) {
             throw new IllegalArgumentException("房间不存在");
@@ -141,6 +151,7 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
 
     @Override
     public void updateRoom(GameRoom room) {
+        autoEndExpiredRooms();
         gameRoomMapper.updateById(room);
     }
 
@@ -166,5 +177,21 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
             }
         }
         throw new RuntimeException("房间创建失败，请稍后再试");
+    }
+
+    private void autoEndExpiredRooms() {
+        // 12小时内无新增对局（以 last_active_time 为准）则自动结束
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(12);
+        gameRoomMapper.autoEndInactiveRooms(cutoff);
+    }
+
+    private void ensureNoActiveRoomForUser(Long userId) {
+        String uid = String.valueOf(userId);
+        String quotedPattern = "%\"id\":\"" + uid + "\"%";
+        String plainPattern = "%\"id\":" + uid + "%";
+        int activeCount = gameRoomMapper.countActiveRoomsByOwnerOrPlayer(userId, quotedPattern, plainPattern);
+        if (activeCount > 0) {
+            throw new IllegalArgumentException("你已有进行中的房间，请先继续或结束当前房间");
+        }
     }
 }
