@@ -43,21 +43,21 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
     public java.util.List<GameRoom> listRooms(Long userId) {
         autoEndExpiredRooms();
         // 房主 + 曾加入房间（players JSON 中含该用户 id）均可看到自己的房间列表
-        String uid = String.valueOf(userId);
+        String userIdStr = String.valueOf(userId);
         // 数字 id 在 JSON 里无引号，避免 LIKE "%\"id\":1%" 误匹配 "id":12
         java.util.List<GameRoom> rooms = gameRoomMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<GameRoom>()
                         .nested(w -> w.eq("owner_id", userId)
                                 .or()
-                                .like("players", "\"id\":\"" + uid + "\"")
+                                .like("players", "\"id\":\"" + userIdStr + "\"")
                                 .or()
-                                .like("players", "\"id\":" + uid + "}")
+                                .like("players", "\"id\":" + userIdStr + "}")
                                 .or()
-                                .like("players", "\"id\":" + uid + ",")
+                                .like("players", "\"id\":" + userIdStr + ",")
                                 .or()
-                                .like("players", ",\"id\":" + uid + "}")
+                                .like("players", ",\"id\":" + userIdStr + "}")
                                 .or()
-                                .like("players", ",\"id\":" + uid + ","))
+                                .like("players", ",\"id\":" + userIdStr + ","))
                         .orderByDesc("create_time"));
         
         // Calculate score summary for each room
