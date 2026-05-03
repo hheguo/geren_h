@@ -208,4 +208,13 @@ public class GameRoomServiceImpl extends ServiceImpl<GameRoomMapper, GameRoom> i
             throw new IllegalArgumentException("你已有进行中的房间，请先继续或结束当前房间");
         }
     }
+
+    @Override
+    public GameRoom getActiveRoomForUser(Long userId) {
+        autoEndExpiredRooms();
+        String uid = String.valueOf(userId);
+        String quotedPattern = "%\"id\":\"" + uid + "\"%";
+        String plainPattern = "%\"id\":" + uid + "%";
+        return gameRoomMapper.selectActiveRoomForUser(userId, quotedPattern, plainPattern);
+    }
 }

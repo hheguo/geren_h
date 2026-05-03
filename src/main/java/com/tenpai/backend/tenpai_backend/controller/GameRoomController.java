@@ -70,24 +70,7 @@ public class GameRoomController {
     }
 
     /**
-     * 获取房间详情 (包含完整记录)
-     */
-    @GetMapping("/{roomCode}")
-    public R<Map<String, Object>> detail(@PathVariable String roomCode) {
-        GameRoom room = gameRoomService.getRoomByCode(roomCode);
-        
-        // Fetch records via service
-        java.util.List<com.tenpai.backend.tenpai_backend.entity.GameRecord> records = gameRoomService.getRoomRecords(room.getId());
-        
-        Map<String, Object> data = new java.util.HashMap<>();
-        data.put("room", room);
-        data.put("records", records);
-        
-        return R.ok(data);
-    }
-
-    /**
-     * 获取用户房间列表
+     * 获取用户房间列表（须写在 /{roomCode} 之前，避免 list 被当作房间号）
      */
     @GetMapping("/list")
     public R<java.util.List<GameRoom>> list(@RequestParam Long userId) {
@@ -96,7 +79,19 @@ public class GameRoomController {
     }
 
     /**
-     * 获取小程序码
+     * 获取当前用户一个进行中的房间（房主或玩家），用于创建冲突时跳转
+     */
+    @GetMapping("/active")
+    public R<GameRoom> activeRoom(@RequestParam Long userId) {
+        GameRoom room = gameRoomService.getActiveRoomForUser(userId);
+        if (room == null) {
+            return R.fail(404, "没有进行中的房间");
+        }
+        return R.ok(room);
+    }
+
+    /**
+     * 获取小程序码（须写在 /{roomCode} 之前）
      */
     @GetMapping("/qrcode")
     public R<String> getRoomQRCode(@RequestParam(required = false) String code,
@@ -111,5 +106,22 @@ public class GameRoomController {
             return R.fail("Failed to generate QR code");
         }
         return R.ok(imageBase64);
+    }
+
+    /**
+     * 获取房间详情 (包含完整记录)
+     */
+    @GetMapping("/{roomCode}")
+    public R<Map<String, Object>> detail(@PathVariable String roomCode) {
+        GameRoom room = gameRoomService.getRoomByCode(roomCode);
+        
+        // Fetch records via service
+        java.util.List<com.tenpai.backend.tenpai_backend.entity.GameRecord> records = gameRoomService.getRoomRecords(room.getId());
+        
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("room", room);
+        data.put("records", records);
+        
+        return R.ok(data);
     }
 }

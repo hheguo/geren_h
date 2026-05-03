@@ -57,4 +57,9 @@ public interface GameRoomService extends IService<GameRoom> {
     void updateRoom(GameRoom room);
 
     java.util.List<GameRecord> getRoomRecords(Long roomId);
+
+    /**
+     * 用户作为房主或玩家时，当前一个进行中的房间；没有则返回 null
+     */
+    GameRoom getActiveRoomForUser(Long userId);
 }

@@ -31,4 +31,15 @@ public interface GameRoomMapper extends BaseMapper<GameRoom> {
     int countActiveRoomsByOwnerOrPlayer(@Param("userId") Long userId,
                                         @Param("quotedPattern") String quotedPattern,
                                         @Param("plainPattern") String plainPattern);
+
+    /**
+     * 当前用户作为房主或玩家参与的一个进行中房间（最近活跃优先）
+     */
+    @Select("SELECT * FROM game_room " +
+            "WHERE status = 0 " +
+            "AND (owner_id = #{userId} OR players LIKE #{quotedPattern} OR players LIKE #{plainPattern}) " +
+            "ORDER BY COALESCE(last_active_time, create_time) DESC LIMIT 1")
+    GameRoom selectActiveRoomForUser(@Param("userId") Long userId,
+                                     @Param("quotedPattern") String quotedPattern,
+                                     @Param("plainPattern") String plainPattern);
 }
